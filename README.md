@@ -48,17 +48,6 @@ python3 pytorch/train.py --compiler setup
 python3 pytorch/train.py --compiler cmake
 ```
 
-### Run python
-**Compare kernel running time**  
-```shell
-python3 tensorflow/time.py --compiler cmake
-```
-
-**Train model**  
-```shell
-python3 tensorflow/train.py --compiler cmake
-```
-
 ## F.A.Q
 > **Q.** ImportError: libc10.so: cannot open shared object file: No such file or directory  
 **A.** You must do `import torch` before `import add2`.
