@@ -1,0 +1,23 @@
+#获取GPU设备数量
+
+int idDeviceCount = 0;
+cudaGetDeviceCount(&idDeviceCount);
+
+#设置GPU执行时使用的设备
+int iDev=0;
+cudaSetDevice(iDev);
+
+#内存管理
+通过内存分配，数据传递，内存初始化，内存释放进行内存管理
+标准c语言内存管理&&cuda内存管理
+双重指针用来返回多个返回值，多返回在C++和C中会报错。
+malloc&&cudaMalloc
+memcpy&&cudaMemcpy
+memset&&cudaMemset
+free&&cudaFree
+
+#自定义设备函数
+设备函数用__device__修饰，__global__修饰核函数，一般主机调用，设备执行，__global__不能和__host__和__device__同时使用
+主机函数
+c++普通函数用__host__修饰，__host__可以省
+__host__和__device__可以同时修饰一个，分别编译
