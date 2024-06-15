@@ -1,0 +1,102 @@
+#获取GPU设备数量
+
+int idDeviceCount = 0;
+cudaGetDeviceCount(&idDeviceCount);
+
+#设置GPU执行时使用的设备
+int iDev=0;
+cudaSetDevice(iDev);
+
+#内存管理
+通过内存分配，数据传递，内存初始化，内存释放进行内存管理
+标准c语言内存管理&&cuda内存管理
+双重指针用来返回多个返回值，多返回在C++和C中会报错。
+malloc&&cudaMalloc
+memcpy&&cudaMemcpy
+memset&&cudaMemset
+free&&cudaFree
+
+#自定义设备函数
+设备函数用__device__修饰，__global__修饰核函数，一般主机调用，设备执行，__global__不能和__host__和__device__同时使用
+主机函数
+c++普通函数用__host__修饰，__host__可以省
+__host__和__device__可以同时修饰一个，分别编译
+
+#错误检查函数
+调用ErrorCheck函数进行包装，参数filename使用__FILE__;参数lineNumber使用__LINE__
+cudaError_t ErrorCheck(cudaError_t error_code, const char* filename, int lineNumber)
+{
+    if (error_code != cudaSuccess)
+    {
+
+    }
+}
+
+#检查核函数
+ErrorCheck(cudaGetLastError(), __FILE__, __LINE__);
+ErrorCheck(cudaDeviceSynchonize(), __FILE__, __LINE__);
+
+#cuda计时
+cudaEvent_t start, stop;
+ErrorCheck(cudaEventCreate(&start),__FILE__, __LINE__);
+ErrorCheck(cudaEventCreate(&stop),__FILE__, __LINE__);
+ErrorCheck(cudaEventRecord(start),__FILE__, __LINE__);
+cudaEventQuery(start);      //此处不能用错误检测函数
+
+addFromGPU<<<grid, block>>>(fpDevice_A, fpDevice_B, fpDevice_C, iElemCount);    //调用核函数
+
+ErrorCheck(cudaEventRecord(stop),__FILE__, __LINE__);
+ErrorCheck(cudaEventSynchronize(stop), __FILE__, __LINE__); //同步
+float elapsed_time;
+ErrorCheck(cudaEventElapsedTime(&elapsed_time, start, stop),__FILE__, __LINE__);
+
+if (repeat > 0)
+{
+    t_sum += elapsed_time;
+}
+ErrorCheck(cudaEventDestroy(start),__FILE__, __LINE__);
+ErrorCheck(cudaEventDestroy(stop),__FILE__, __LINE__);
+
+#nvprof性能分析
+执行命令 nvprof .exe
+
+#运行时API查询GPU信息
+调用 cudaDEviceProp prop;
+ErrorCheck(cudaGetDeviceProperties(&prop, device_id),__FILE__, __LINE__);
+
+#二维网格，二维线程块
+block(0,0),block(1,0),block(2,0),block(3,0)
+block(0,1),block(1,1),block(2,1),block(3,1)
+四个网格每个两个线程块，每个线块里面16个线程，网格前一位，线程块后一位
+
+ix = threadidx.x + blockidx.x * blockDim.x
+iy = threadidx.y + blockidx.y * blockDim.y
+
+idx = iy * nx + ix
+
+#全局内存
+容量最大，延迟最大，全局内存中数据所有线程可见，Host端可见，且与程序相同的生命周期
+使用cudaMalloc声明，cudaFree释放
+__device__ 静态声明全局变量
+
+#共享内存
+使用__shared__修饰，整个内存共享， 访问共享内存必须加上同步机制
+线程块内同步 void __syncthreads();
+
+经常访问的数据由全局搬到共享提高访问效率
+
+#常量内存
+
+使用__constant__ 不能定义在核函数中，只读
+常量内存必须在主机端使用cudaMemcpyToSymbol进行初始化
+
+#GPU缓存种类
+一级缓存（L1）
+二级缓存（L2）
+只读常量缓存
+只读纹理缓存
+
+L1缓存用来存储本地内存，L2存储全局内存
+
+线程束分支
+同一个线程束执行不同分支的指令，则会造成线程束分支，削弱并行性
